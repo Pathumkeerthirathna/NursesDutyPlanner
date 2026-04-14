@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum AccountType {
+  CASH
+  BANK
+  CREDIT_CARD
+  E_WALLET
+  SAVINGS
+}
+
+enum TransactionKind {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionStatus {
+  DRAFT
+  POSTED
+  VOID
+}
+
+enum FrequencyType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum ReminderStatus {
+  PENDING
+  PAID
+  MISSED
+  CANCELLED
+}
+
+model User {
+  id                 String                       @id @default(uuid()) @db.Uuid
+  fullName           String                       @db.VarChar(150)
+  email              String                       @unique @db.VarChar(150)
+  mobileNo           String?                      @db.VarChar(30)
+  passwordHash       String                       @db.VarChar(500)
+  isActive           Boolean                      @default(true)
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  profile            UserProfile?
+  categories         Category[]
+  merchants          Merchant[]
+  tags               Tag[]
+  accounts           FinancialAccount[]
+  transactions       Transaction[]
+  budgets            Budget[]
+  recurringTemplates RecurringTransactionTemplate[]
+  reminders          BillReminder[]
+}
+
+model UserProfile {
+  id                     String    @id @default(uuid()) @db.Uuid
+  userId                 String    @unique @db.Uuid
+  defaultCurrencyCode    String    @default("LKR") @db.VarChar(10)
+  country                String?   @db.VarChar(100)
+  salaryDay              Int?
+  financialMonthStartDay Int?
+  timeZone               String?   @db.VarChar(100)
+  occupation             String?   @db.VarChar(100)
+  employerName           String?   @db.VarChar(150)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id                String       @id @default(uuid()) @db.Uuid
+  userId            String       @db.Uuid
+  type              CategoryType
+  name              String       @db.VarChar(100)
+  parentCategoryId  String?      @db.Uuid
+  icon              String?      @db.VarChar(50)
+  colorCode         String?      @db.VarChar(20)
+  sortOrder         Int          @default(0)
+  isSystemDefined   Boolean      @default(false)
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentCategory    Category?    @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories     Category[]   @relation("CategoryHierarchy")
+  transactions      Transaction[]
+  transactionSplits TransactionSplit[]
+  budgetItems       BudgetCategory[]
+  reminders         BillReminder[]
+  recurringTemplates RecurringTransactionTemplate[]
+
+  @@index([userId])
+  @@index([parentCategoryId])
+  @@unique([userId, type, name])
+}
+
+model Merchant {
+  id                 String                       @id @default(uuid()) @db.Uuid
+  userId             String                       @db.Uuid
+  name               String                       @db.VarChar(150)
+  merchantType       String?                      @db.VarChar(50)
+  contactNo          String?                      @db.VarChar(30)
+  notes              String?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  user               User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions       Transaction[]
+  recurringTemplates RecurringTransactionTemplate[]
+
+  @@index([userId])
+  @@unique([userId, name])
+}
+
+model Tag {
+  id              String           @id @default(uuid()) @db.Uuid
+  userId          String           @db.Uuid
+  name            String           @db.VarChar(50)
+  createdAt       DateTime         @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionTags TransactionTag[]
+
+  @@index([userId])
+  @@unique([userId, name])
+}
+
+model FinancialAccount {
+  id                   String                       @id @default(uuid()) @db.Uuid
+  userId               String                       @db.Uuid
+  type                 AccountType
+  currencyCode         String                       @default("LKR") @db.VarChar(10)
+  name                 String                       @db.VarChar(100)
+  institutionName      String?                      @db.VarChar(150)
+  accountNumberMasked  String?                      @db.VarChar(50)
+  openingBalance       Decimal                      @default(0) @db.Decimal(18, 2)
+  currentBalance       Decimal                      @default(0) @db.Decimal(18, 2)
+  creditLimit          Decimal?                     @db.Decimal(18, 2)
+  statementDay         Int?
+  paymentDueDay        Int?
+  isIncludedInNetWorth Boolean                      @default(true)
+  isArchived           Boolean                      @default(false)
+  openedDate           DateTime?                    @db.Date
+  closedDate           DateTime?                    @db.Date
+  createdAt            DateTime                     @default(now())
+  updatedAt            DateTime                     @updatedAt
+
+  user                 User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromTransactions     Transaction[]                @relation("FromAccountTransactions")
+  toTransactions       Transaction[]                @relation("ToAccountTransactions")
+  recurringFrom        RecurringTransactionTemplate[] @relation("RecurringFromAccount")
+  recurringTo          RecurringTransactionTemplate[] @relation("RecurringToAccount")
+
+  @@index([userId])
+  @@unique([userId, name])
+}
+
+model Transaction {
+  id                  String              @id @default(uuid()) @db.Uuid
+  userId              String              @db.Uuid
+  transactionNo       String              @unique @db.VarChar(30)
+  transactionDate     DateTime
+  postedDate          DateTime?
+  kind                TransactionKind
+  status              TransactionStatus   @default(POSTED)
+  fromAccountId       String?             @db.Uuid
+  toAccountId         String?             @db.Uuid
+  categoryId          String?             @db.Uuid
+  merchantId          String?             @db.Uuid
+  amount              Decimal             @db.Decimal(18, 2)
+  currencyCode        String              @default("LKR") @db.VarChar(10)
+  exchangeRate        Decimal             @default(1) @db.Decimal(18, 6)
+  referenceNo         String?             @db.VarChar(100)
+  notes               String?
+  paymentMethod       String?             @db.VarChar(50)
+  location            String?             @db.VarChar(150)
+  isRecurringGenerated Boolean            @default(false)
+  recurringTemplateId String?             @db.Uuid
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromAccount         FinancialAccount?   @relation("FromAccountTransactions", fields: [fromAccountId], references: [id], onDelete: SetNull)
+  toAccount           FinancialAccount?   @relation("ToAccountTransactions", fields: [toAccountId], references: [id], onDelete: SetNull)
+  category            Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  merchant            Merchant?           @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  recurringTemplate   RecurringTransactionTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+
+  splits              TransactionSplit[]
+  tags                TransactionTag[]
+  attachments         TransactionAttachment[]
+  linkedReminder      BillReminder?
+
+  @@index([userId])
+  @@index([transactionDate])
+  @@index([kind])
+  @@index([categoryId])
+  @@index([merchantId])
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@index([recurringTemplateId])
+}
+
+model TransactionSplit {
+  id             String       @id @default(uuid()) @db.Uuid
+  transactionId  String       @db.Uuid
+  categoryId     String       @db.Uuid
+  amount         Decimal      @db.Decimal(18, 2)
+  notes          String?
+  createdAt      DateTime     @default(now())
+
+  transaction    Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  category       Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([transactionId])
+  @@index([categoryId])
+}
+
+model TransactionTag {
+  id             String       @id @default(uuid()) @db.Uuid
+  transactionId  String       @db.Uuid
+  tagId          String       @db.Uuid
+
+  transaction    Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  tag            Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([transactionId, tagId])
+  @@index([tagId])
+}
+
+model TransactionAttachment {
+  id             String       @id @default(uuid()) @db.Uuid
+  transactionId  String       @db.Uuid
+  fileName       String       @db.VarChar(255)
+  fileUrl        String       @db.VarChar(500)
+  fileType       String?      @db.VarChar(50)
+  uploadedAt     DateTime     @default(now())
+
+  transaction    Transaction  @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+}
+
+model Budget {
+  id                     String           @id @default(uuid()) @db.Uuid
+  userId                 String           @db.Uuid
+  name                   String           @db.VarChar(100)
+  startDate              DateTime         @db.Date
+  endDate                DateTime         @db.Date
+  currencyCode           String           @default("LKR") @db.VarChar(10)
+  budgetAmount           Decimal          @db.Decimal(18, 2)
+  alertThresholdPercent  Decimal?         @db.Decimal(5, 2)
+  isActive               Boolean          @default(true)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  user                   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories             BudgetCategory[]
+
+  @@index([userId])
+  @@index([startDate, endDate])
+}
+
+model BudgetCategory {
+  id              String    @id @default(uuid()) @db.Uuid
+  budgetId        String    @db.Uuid
+  categoryId      String    @db.Uuid
+  allocatedAmount Decimal   @db.Decimal(18, 2)
+  warningPercent  Decimal?  @db.Decimal(5, 2)
+
+  budget          Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category        Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([budgetId, categoryId])
+  @@index([categoryId])
+}
+
+model RecurringTransactionTemplate {
+  id                 String            @id @default(uuid()) @db.Uuid
+  userId             String            @db.Uuid
+  templateName       String            @db.VarChar(100)
+  kind               TransactionKind
+  fromAccountId      String?           @db.Uuid
+  toAccountId        String?           @db.Uuid
+  categoryId         String?           @db.Uuid
+  merchantId         String?           @db.Uuid
+  amount             Decimal           @db.Decimal(18, 2)
+  frequencyType      FrequencyType
+  frequencyInterval  Int               @default(1)
+  nextRunDate        DateTime          @db.Date
+  endDate            DateTime?         @db.Date
+  autoPost           Boolean           @default(false)
+  isActive           Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromAccount        FinancialAccount? @relation("RecurringFromAccount", fields: [fromAccountId], references: [id], onDelete: SetNull)
+  toAccount          FinancialAccount? @relation("RecurringToAccount", fields: [toAccountId], references: [id], onDelete: SetNull)
+  category           Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  merchant           Merchant?         @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  generatedTransactions Transaction[]
+
+  @@index([userId])
+  @@index([nextRunDate])
+  @@index([isActive])
+}
+
+model BillReminder {
+  id                  String          @id @default(uuid()) @db.Uuid
+  userId              String          @db.Uuid
+  categoryId          String?         @db.Uuid
+  linkedTransactionId String?         @unique @db.Uuid
+  reminderTitle       String          @db.VarChar(100)
+  amountExpected      Decimal?        @db.Decimal(18, 2)
+  dueDate             DateTime        @db.Date
+  reminderDaysBefore  Int             @default(1)
+  isPaid              Boolean         @default(false)
+  status              ReminderStatus  @default(PENDING)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category            Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  linkedTransaction   Transaction?    @relation(fields: [linkedTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([dueDate])
+  @@index([status])
+}

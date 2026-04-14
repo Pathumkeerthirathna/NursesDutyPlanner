@@ -1,0 +1,5 @@
+# netlify.toml
+[build]
+  command = "npm run build"
+  environment = { NODE_ENV = "production" }
+

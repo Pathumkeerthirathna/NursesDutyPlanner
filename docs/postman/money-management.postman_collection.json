@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "Nurses Duty Planner - Money Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for the Prisma-backed money management module."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "userId", "value": "11111111-1111-4111-8111-111111111111" },
+    { "key": "salaryCategoryId", "value": "22222222-2222-4222-8222-111111111111" },
+    { "key": "groceriesCategoryId", "value": "33333333-3333-4333-8333-111111111111" },
+    { "key": "cashAccountId", "value": "66666666-6666-4666-8666-111111111111" },
+    { "key": "bankAccountId", "value": "66666666-6666-4666-8666-222222222222" },
+    { "key": "walletAccountId", "value": "66666666-6666-4666-8666-333333333333" },
+    { "key": "merchantId", "value": "44444444-4444-4444-8444-111111111111" },
+    { "key": "essentialTagId", "value": "55555555-5555-4555-8555-111111111111" },
+    { "key": "monthlyTagId", "value": "55555555-5555-4555-8555-222222222222" }
+  ],
+  "item": [
+    {
+      "name": "Money Module Index",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/money",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money"]
+        }
+      }
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/money/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "health"]
+        }
+      }
+    },
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Nimali Perera\",\n  \"email\": \"nimali.perera@example.com\",\n  \"mobileNo\": \"+94 77 555 0101\",\n  \"passwordHash\": \"demo-password-hash\",\n  \"isActive\": true,\n  \"profile\": {\n    \"defaultCurrencyCode\": \"LKR\",\n    \"country\": \"Sri Lanka\",\n    \"salaryDay\": 25,\n    \"financialMonthStartDay\": 1,\n    \"timeZone\": \"Asia/Colombo\",\n    \"occupation\": \"Staff Nurse\",\n    \"employerName\": \"National Hospital\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/money/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "users"]
+        }
+      }
+    },
+    {
+      "name": "Create Category",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"type\": \"EXPENSE\",\n  \"name\": \"Uniforms\",\n  \"icon\": \"shirt\",\n  \"colorCode\": \"#ef4444\",\n  \"sortOrder\": 4,\n  \"isSystemDefined\": false,\n  \"isActive\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/money/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "categories"]
+        }
+      }
+    },
+    {
+      "name": "Create Account",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"type\": \"BANK\",\n  \"name\": \"Peoples Bank Savings\",\n  \"currencyCode\": \"LKR\",\n  \"institutionName\": \"Peoples Bank\",\n  \"accountNumberMasked\": \"****9988\",\n  \"openingBalance\": 50000,\n  \"currentBalance\": 50000,\n  \"isIncludedInNetWorth\": true,\n  \"isArchived\": false,\n  \"openedDate\": \"2026-04-01\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/money/accounts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "accounts"]
+        }
+      }
+    },
+    {
+      "name": "Create Expense Transaction",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"transactionNo\": \"TXN-EXP-2002\",\n  \"transactionDate\": \"2026-04-06T16:30:00.000Z\",\n  \"postedDate\": \"2026-04-06T16:35:00.000Z\",\n  \"kind\": \"EXPENSE\",\n  \"status\": \"POSTED\",\n  \"fromAccountId\": \"{{cashAccountId}}\",\n  \"categoryId\": \"{{groceriesCategoryId}}\",\n  \"merchantId\": \"{{merchantId}}\",\n  \"amount\": 4200,\n  \"currencyCode\": \"LKR\",\n  \"exchangeRate\": 1,\n  \"referenceNo\": \"GRC-APR-06\",\n  \"notes\": \"Groceries after shift\",\n  \"paymentMethod\": \"Cash\",\n  \"tagIds\": [\n    \"{{essentialTagId}}\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/money/transactions",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "transactions"]
+        }
+      }
+    },
+    {
+      "name": "Get Dashboard Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/money/dashboard?userId={{userId}}&fromDate=2026-04-01&toDate=2026-04-30",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "money", "dashboard"],
+          "query": [
+            { "key": "userId", "value": "{{userId}}" },
+            { "key": "fromDate", "value": "2026-04-01" },
+            { "key": "toDate", "value": "2026-04-30" }
+          ]
+        }
+      }
+    }
+  ]
+}
