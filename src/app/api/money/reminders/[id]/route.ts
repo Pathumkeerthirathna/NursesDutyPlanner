@@ -75,9 +75,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    await prisma.billReminder.delete({ where: { id } });
+    await prisma.billReminder.update({
+      where: { id },
+      data: { status: "CANCELLED", isPaid: false },
+    });
 
-    return NextResponse.json({ deletedId: id });
+    return NextResponse.json({ deletedId: id, archived: true });
   } catch (error) {
     return handleRouteError(error, "delete reminder");
   }

@@ -17,6 +17,9 @@ enum AccountType {
   CREDIT_CARD
   E_WALLET
   SAVINGS
+  FIXED_DEPOSIT
+  RETIREMENT
+  INVESTMENT
 }
 
 enum TransactionKind {
@@ -45,6 +48,98 @@ enum ReminderStatus {
   CANCELLED
 }
 
+enum GoalStatus {
+  ACTIVE
+  ACHIEVED
+  PAUSED
+  CANCELLED
+}
+
+enum SalaryComponentType {
+  BASIC
+  ALLOWANCE
+  BONUS
+  OVERTIME
+  REIMBURSEMENT
+  DEDUCTION
+  TAX
+  OTHER
+}
+
+enum ReimbursementStatus {
+  PENDING
+  APPROVED
+  RECEIVED
+  REJECTED
+  CANCELLED
+}
+
+enum LiabilityType {
+  LOAN
+  EMI
+  CREDIT_CARD
+  MORTGAGE
+  LEASE
+  OTHER
+}
+
+enum LiabilityStatus {
+  ACTIVE
+  CLOSED
+  DEFAULTED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  MISSED
+  CANCELLED
+}
+
+enum SnapshotStatus {
+  OPEN
+  LOCKED
+  ARCHIVED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ARCHIVE
+  RESTORE
+  IMPORT
+}
+
+enum ImportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+enum InvestmentAccountType {
+  STOCK
+  MUTUAL_FUND
+  ETF
+  BOND
+  RETIREMENT
+  FIXED_DEPOSIT
+  CRYPTO
+  OTHER
+}
+
+enum InvestmentTransactionType {
+  BUY
+  SELL
+  DIVIDEND
+  INTEREST
+  FEE
+  ADJUSTMENT
+}
+
 model User {
   id                 String                       @id @default(uuid()) @db.Uuid
   fullName           String                       @db.VarChar(150)
@@ -64,6 +159,15 @@ model User {
   budgets            Budget[]
   recurringTemplates RecurringTransactionTemplate[]
   reminders          BillReminder[]
+  savingsGoals       SavingsGoal[]
+  incomeSources      IncomeSource[]
+  salaryPayments     SalaryPayment[]
+  reimbursementClaims ReimbursementClaim[]
+  liabilityAccounts  LiabilityAccount[]
+  monthlySnapshots   MonthlyFinancialSnapshot[]
+  auditLogs          AuditLog[]
+  importJobs         ImportJob[]
+  investmentAccounts InvestmentAccount[]
 }
 
 model UserProfile {
@@ -101,9 +205,11 @@ model Category {
   subCategories     Category[]   @relation("CategoryHierarchy")
   transactions      Transaction[]
   transactionSplits TransactionSplit[]
-  budgetItems       BudgetCategory[]
-  reminders         BillReminder[]
+  budgetItems        BudgetCategory[]
+  reminders          BillReminder[]
   recurringTemplates RecurringTransactionTemplate[]
+  incomeSources      IncomeSource[]           @relation("IncomeSourceCategory")
+  reimbursementClaims ReimbursementClaim[]
 
   @@index([userId])
   @@index([parentCategoryId])
@@ -117,6 +223,7 @@ model Merchant {
   merchantType       String?                      @db.VarChar(50)
   contactNo          String?                      @db.VarChar(30)
   notes              String?
+  isActive           Boolean                      @default(true)
   createdAt          DateTime                     @default(now())
   updatedAt          DateTime                     @updatedAt
 
@@ -206,6 +313,9 @@ model Transaction {
   tags                TransactionTag[]
   attachments         TransactionAttachment[]
   linkedReminder      BillReminder?
+  salaryPayment       SalaryPayment?          @relation("SalaryPaymentTransaction")
+  reimbursementClaim  ReimbursementClaim?     @relation("ReimbursementTransaction")
+  liabilityInstallment LiabilityInstallment?  @relation("LiabilityInstallmentTransaction")
 
   @@index([userId])
   @@index([transactionDate])
@@ -343,4 +453,281 @@ model BillReminder {
   @@index([userId])
   @@index([dueDate])
   @@index([status])
+}
+
+model SavingsGoal {
+  id              String      @id @default(uuid()) @db.Uuid
+  userId          String      @db.Uuid
+  goalName        String      @db.VarChar(120)
+  targetAmount    Decimal     @db.Decimal(18, 2)
+  currentAmount   Decimal     @default(0) @db.Decimal(18, 2)
+  currencyCode    String      @default("LKR") @db.VarChar(10)
+  targetDate      DateTime?   @db.Date
+  status          GoalStatus  @default(ACTIVE)
+  notes           String?
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model IncomeSource {
+  id                String     @id @default(uuid()) @db.Uuid
+  userId            String     @db.Uuid
+  defaultCategoryId String?    @db.Uuid
+  sourceName        String     @db.VarChar(120)
+  sourceType        String?    @db.VarChar(50)
+  employerName      String?    @db.VarChar(150)
+  defaultAmount     Decimal?   @db.Decimal(18, 2)
+  payDay            Int?
+  isTaxable         Boolean    @default(false)
+  isActive          Boolean    @default(true)
+  notes             String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultCategory   Category?  @relation("IncomeSourceCategory", fields: [defaultCategoryId], references: [id], onDelete: SetNull)
+  salaryPayments    SalaryPayment[]
+
+  @@index([userId])
+  @@index([defaultCategoryId])
+  @@unique([userId, sourceName])
+}
+
+model SalaryPayment {
+  id                  String              @id @default(uuid()) @db.Uuid
+  userId              String              @db.Uuid
+  incomeSourceId      String?             @db.Uuid
+  linkedTransactionId String?             @unique @db.Uuid
+  salaryMonth         DateTime            @db.Date
+  payDate             DateTime            @db.Date
+  basicAmount         Decimal             @default(0) @db.Decimal(18, 2)
+  grossAmount         Decimal             @default(0) @db.Decimal(18, 2)
+  deductionAmount     Decimal             @default(0) @db.Decimal(18, 2)
+  netAmount           Decimal             @default(0) @db.Decimal(18, 2)
+  currencyCode        String              @default("LKR") @db.VarChar(10)
+  status              TransactionStatus   @default(POSTED)
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomeSource        IncomeSource?       @relation(fields: [incomeSourceId], references: [id], onDelete: SetNull)
+  linkedTransaction   Transaction?        @relation("SalaryPaymentTransaction", fields: [linkedTransactionId], references: [id], onDelete: SetNull)
+  components          SalaryComponent[]
+
+  @@index([userId])
+  @@index([incomeSourceId])
+  @@index([salaryMonth])
+  @@index([payDate])
+}
+
+model SalaryComponent {
+  id                String               @id @default(uuid()) @db.Uuid
+  salaryPaymentId   String               @db.Uuid
+  componentType     SalaryComponentType
+  componentName     String               @db.VarChar(100)
+  amount            Decimal              @db.Decimal(18, 2)
+  isTaxable         Boolean              @default(false)
+  displayOrder      Int                  @default(0)
+  notes             String?
+
+  salaryPayment     SalaryPayment        @relation(fields: [salaryPaymentId], references: [id], onDelete: Cascade)
+
+  @@index([salaryPaymentId])
+}
+
+model ReimbursementClaim {
+  id                  String               @id @default(uuid()) @db.Uuid
+  userId              String               @db.Uuid
+  categoryId          String?              @db.Uuid
+  linkedTransactionId String?              @unique @db.Uuid
+  claimNo             String               @unique @db.VarChar(30)
+  title               String               @db.VarChar(120)
+  description         String?
+  claimDate           DateTime             @db.Date
+  amountClaimed       Decimal              @db.Decimal(18, 2)
+  amountReceived      Decimal              @default(0) @db.Decimal(18, 2)
+  receivedDate        DateTime?            @db.Date
+  employerName        String?              @db.VarChar(150)
+  isTaxDeductible     Boolean              @default(false)
+  status              ReimbursementStatus  @default(PENDING)
+  notes               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category            Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  linkedTransaction   Transaction?         @relation("ReimbursementTransaction", fields: [linkedTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([claimDate])
+  @@index([status])
+}
+
+model LiabilityAccount {
+  id                  String           @id @default(uuid()) @db.Uuid
+  userId              String           @db.Uuid
+  accountName         String           @db.VarChar(120)
+  liabilityType       LiabilityType
+  lenderName          String?          @db.VarChar(150)
+  accountNumberMasked String?          @db.VarChar(50)
+  principalAmount     Decimal          @db.Decimal(18, 2)
+  outstandingAmount   Decimal          @db.Decimal(18, 2)
+  interestRate        Decimal?         @db.Decimal(8, 4)
+  emiAmount           Decimal?         @db.Decimal(18, 2)
+  currencyCode        String           @default("LKR") @db.VarChar(10)
+  startDate           DateTime?        @db.Date
+  endDate             DateTime?        @db.Date
+  dueDay              Int?
+  status              LiabilityStatus  @default(ACTIVE)
+  isActive            Boolean          @default(true)
+  notes               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  installments        LiabilityInstallment[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model LiabilityInstallment {
+  id                  String             @id @default(uuid()) @db.Uuid
+  liabilityAccountId  String             @db.Uuid
+  linkedTransactionId String?            @unique @db.Uuid
+  installmentNo       Int
+  dueDate             DateTime           @db.Date
+  principalDue        Decimal            @default(0) @db.Decimal(18, 2)
+  interestDue         Decimal            @default(0) @db.Decimal(18, 2)
+  totalDue            Decimal            @db.Decimal(18, 2)
+  amountPaid          Decimal            @default(0) @db.Decimal(18, 2)
+  paidDate            DateTime?          @db.Date
+  status              InstallmentStatus  @default(PENDING)
+  notes               String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  liabilityAccount    LiabilityAccount   @relation(fields: [liabilityAccountId], references: [id], onDelete: Cascade)
+  linkedTransaction   Transaction?       @relation("LiabilityInstallmentTransaction", fields: [linkedTransactionId], references: [id], onDelete: SetNull)
+
+  @@unique([liabilityAccountId, installmentNo])
+  @@index([liabilityAccountId])
+  @@index([dueDate])
+  @@index([status])
+}
+
+model InvestmentAccount {
+  id                  String                @id @default(uuid()) @db.Uuid
+  userId              String                @db.Uuid
+  accountName         String                @db.VarChar(120)
+  accountType         InvestmentAccountType
+  institutionName     String?               @db.VarChar(150)
+  currencyCode        String                @default("LKR") @db.VarChar(10)
+  costBasis           Decimal               @default(0) @db.Decimal(18, 2)
+  currentValue        Decimal               @default(0) @db.Decimal(18, 2)
+  unitsHeld           Decimal?              @db.Decimal(18, 6)
+  isRetirement        Boolean               @default(false)
+  isArchived          Boolean               @default(false)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions        InvestmentTransaction[]
+
+  @@index([userId])
+  @@unique([userId, accountName])
+}
+
+model InvestmentTransaction {
+  id                  String                    @id @default(uuid()) @db.Uuid
+  investmentAccountId String                    @db.Uuid
+  transactionDate     DateTime
+  transactionType     InvestmentTransactionType
+  quantity            Decimal?                  @db.Decimal(18, 6)
+  pricePerUnit        Decimal?                  @db.Decimal(18, 6)
+  totalAmount         Decimal                   @db.Decimal(18, 2)
+  fees                Decimal?                  @db.Decimal(18, 2)
+  notes               String?
+  createdAt           DateTime                  @default(now())
+
+  investmentAccount   InvestmentAccount         @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+
+  @@index([investmentAccountId])
+  @@index([transactionDate])
+}
+
+model MonthlyFinancialSnapshot {
+  id                    String          @id @default(uuid()) @db.Uuid
+  userId                String          @db.Uuid
+  snapshotMonth         DateTime        @db.Date
+  currencyCode          String          @default("LKR") @db.VarChar(10)
+  totalIncome           Decimal         @default(0) @db.Decimal(18, 2)
+  totalExpense          Decimal         @default(0) @db.Decimal(18, 2)
+  totalSavings          Decimal         @default(0) @db.Decimal(18, 2)
+  totalAssets           Decimal         @default(0) @db.Decimal(18, 2)
+  totalLiabilities      Decimal         @default(0) @db.Decimal(18, 2)
+  netWorth              Decimal         @default(0) @db.Decimal(18, 2)
+  reimbursementPending  Decimal         @default(0) @db.Decimal(18, 2)
+  upcomingBills         Decimal         @default(0) @db.Decimal(18, 2)
+  healthScore           Int?
+  status                SnapshotStatus  @default(OPEN)
+  notes                 String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([snapshotMonth])
+  @@unique([userId, snapshotMonth])
+}
+
+model AuditLog {
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String?      @db.Uuid
+  entityName      String       @db.VarChar(80)
+  entityId        String?      @db.VarChar(80)
+  action          AuditAction
+  description     String?
+  beforeData      Json?
+  afterData       Json?
+  createdBy       String?      @db.VarChar(150)
+  createdAt       DateTime     @default(now())
+
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityName, entityId])
+  @@index([createdAt])
+}
+
+model ImportJob {
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @db.Uuid
+  jobType         String          @db.VarChar(50)
+  sourceName      String?         @db.VarChar(150)
+  fileName        String?         @db.VarChar(255)
+  status          ImportJobStatus @default(PENDING)
+  totalRows       Int             @default(0)
+  successRows     Int             @default(0)
+  failedRows      Int             @default(0)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  errorLog        String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

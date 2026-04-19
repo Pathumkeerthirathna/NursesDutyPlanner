@@ -1,0 +1,321 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Length 1939 >>
+stream
+BT
+/F1 11 Tf
+50 790 Td
+/F1 18 Tf
+(NURSE DUTY PLANNER USER GUIDE) Tj
+13 TL
+T*
+/F1 8 Tf
+() Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+16 TL
+T*
+/F1 11 Tf
+(This guide explains the app in simple language so any user can understand its main) Tj
+16 TL
+T*
+/F1 11 Tf
+(  purpose and features.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+20 TL
+T*
+/F1 15 Tf
+(What the app does) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+16 TL
+T*
+/F1 11 Tf
+(Nurse Duty Planner helps staff manage:) Tj
+16 TL
+T*
+/F1 11 Tf
+(- duty schedules) Tj
+16 TL
+T*
+/F1 11 Tf
+(- shifts) Tj
+16 TL
+T*
+/F1 11 Tf
+(- duty types) Tj
+16 TL
+T*
+/F1 11 Tf
+(- planning settings) Tj
+16 TL
+T*
+/F1 11 Tf
+(- money tracking and budgeting) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+20 TL
+T*
+/F1 15 Tf
+(Main screens) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Home) Tj
+16 TL
+T*
+/F1 11 Tf
+(Shows a summary dashboard with total duties, shift groups, duty types, and date range) Tj
+16 TL
+T*
+/F1 11 Tf
+(  insights.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Duties) Tj
+16 TL
+T*
+/F1 11 Tf
+(Used to add, edit, filter, and delete duty records.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Shifts) Tj
+16 TL
+T*
+/F1 11 Tf
+(Used to create working shifts such as morning, evening, and night.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Types) Tj
+16 TL
+T*
+/F1 11 Tf
+(Used to create and manage duty categories with colors and status.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Money) Tj
+16 TL
+T*
+/F1 11 Tf
+(Used to manage accounts, transactions, budgets, reminders, and master data.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Settings) Tj
+16 TL
+T*
+/F1 11 Tf
+(Used to define minimum weekly hours, week start and end, overtime rate, and day-off) Tj
+16 TL
+T*
+/F1 11 Tf
+(  rate.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+20 TL
+T*
+/F1 15 Tf
+(Quick start) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+16 TL
+T*
+/F1 11 Tf
+(1. Create shifts.) Tj
+16 TL
+T*
+/F1 11 Tf
+(2. Create duty types.) Tj
+16 TL
+T*
+/F1 11 Tf
+(3. Review settings.) Tj
+16 TL
+T*
+/F1 11 Tf
+(4. Add duty plans.) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1183 >>
+stream
+BT
+/F1 11 Tf
+50 790 Td
+/F1 11 Tf
+(5. Check the dashboard.) Tj
+16 TL
+T*
+/F1 11 Tf
+(6. Use the money area if needed.) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+20 TL
+T*
+/F1 15 Tf
+(Common tasks) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Add a shift) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Open Shifts) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Select Add Shift) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Enter name, time, color, and status) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Save) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Add a duty) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Open Duties) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Select Add Duty) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Fill in date, shift, times, and duty type) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Save) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+18 TL
+T*
+/F1 13 Tf
+(Review money details) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Open Money) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Review overview cards) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Open tabs for transactions, accounts, planning, and masters) Tj
+17 TL
+T*
+/F1 12 Tf
+() Tj
+20 TL
+T*
+/F1 15 Tf
+(Tips) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Use colors to make shifts and duty types easier to identify.) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Check date filters when records are missing.) Tj
+16 TL
+T*
+/F1 11 Tf
+(- Save settings after making any policy changes.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 6 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+7 0 obj
+<< /Type /Catalog /Pages 6 0 R >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000079 00000 n 
+0000002070 00000 n 
+0000002196 00000 n 
+0000003431 00000 n 
+0000003557 00000 n 
+0000003620 00000 n 
+trailer
+<< /Size 8 /Root 7 0 R >>
+startxref
+3669
+%%EOF

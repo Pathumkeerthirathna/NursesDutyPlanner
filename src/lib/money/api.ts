@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export function badRequest(message: string, details?: unknown) {
   return NextResponse.json({ error: message, details }, { status: 400 });
@@ -31,4 +32,41 @@ export function parseDateValue(value: string | null | undefined) {
 export function toNumber(value: unknown) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function toOptionalNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+export async function writeAuditLog(input: {
+  userId?: string | null;
+  entityName: string;
+  entityId?: string | null;
+  action: "CREATE" | "UPDATE" | "DELETE" | "ARCHIVE" | "RESTORE" | "IMPORT";
+  description?: string | null;
+  beforeData?: unknown;
+  afterData?: unknown;
+  createdBy?: string | null;
+}) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: input.userId ?? undefined,
+        entityName: input.entityName,
+        entityId: input.entityId ?? undefined,
+        action: input.action,
+        description: input.description ?? undefined,
+        beforeData: input.beforeData ?? undefined,
+        afterData: input.afterData ?? undefined,
+        createdBy: input.createdBy ?? undefined,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to write audit log:", error);
+  }
 }

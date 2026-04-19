@@ -36,6 +36,7 @@ export async function PUT(
         merchantType: body.merchantType,
         contactNo: body.contactNo,
         notes: body.notes,
+        isActive: body.isActive,
       }),
     });
 
@@ -51,9 +52,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    await prisma.merchant.delete({ where: { id } });
+    await prisma.merchant.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
-    return NextResponse.json({ deletedId: id });
+    return NextResponse.json({ deletedId: id, archived: true });
   } catch (error) {
     return handleRouteError(error, "delete merchant");
   }

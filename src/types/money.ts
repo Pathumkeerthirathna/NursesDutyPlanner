@@ -33,7 +33,15 @@ export type UpdateCategoryInput = Partial<CreateCategoryInput>;
 
 export type CreateFinancialAccountInput = {
   userId: string;
-  type: "CASH" | "BANK" | "CREDIT_CARD" | "E_WALLET" | "SAVINGS";
+  type:
+    | "CASH"
+    | "BANK"
+    | "CREDIT_CARD"
+    | "E_WALLET"
+    | "SAVINGS"
+    | "FIXED_DEPOSIT"
+    | "RETIREMENT"
+    | "INVESTMENT";
   name: string;
   currencyCode?: string;
   institutionName?: string | null;
@@ -82,6 +90,7 @@ export type CreateMerchantInput = {
   merchantType?: string | null;
   contactNo?: string | null;
   notes?: string | null;
+  isActive?: boolean;
 };
 
 export type UpdateMerchantInput = Partial<CreateMerchantInput>;
@@ -143,3 +152,167 @@ export type CreateBillReminderInput = {
 };
 
 export type UpdateBillReminderInput = Partial<CreateBillReminderInput>;
+
+export type CreateSavingsGoalInput = {
+  userId: string;
+  goalName: string;
+  targetAmount: number;
+  currentAmount?: number;
+  currencyCode?: string;
+  targetDate?: string | null;
+  status?: "ACTIVE" | "ACHIEVED" | "PAUSED" | "CANCELLED";
+  notes?: string | null;
+  isActive?: boolean;
+};
+
+export type UpdateSavingsGoalInput = Partial<CreateSavingsGoalInput>;
+
+export type CreateIncomeSourceInput = {
+  userId: string;
+  sourceName: string;
+  sourceType?: string | null;
+  employerName?: string | null;
+  defaultAmount?: number | null;
+  payDay?: number | null;
+  defaultCategoryId?: string | null;
+  isTaxable?: boolean;
+  isActive?: boolean;
+  notes?: string | null;
+};
+
+export type UpdateIncomeSourceInput = Partial<CreateIncomeSourceInput>;
+
+export type CreateSalaryPaymentInput = {
+  userId: string;
+  incomeSourceId?: string | null;
+  linkedTransactionId?: string | null;
+  salaryMonth: string;
+  payDate: string;
+  basicAmount?: number;
+  grossAmount?: number;
+  deductionAmount?: number;
+  netAmount?: number;
+  currencyCode?: string;
+  status?: "DRAFT" | "POSTED" | "VOID";
+  notes?: string | null;
+  components?: Array<{
+    componentType:
+      | "BASIC"
+      | "ALLOWANCE"
+      | "BONUS"
+      | "OVERTIME"
+      | "REIMBURSEMENT"
+      | "DEDUCTION"
+      | "TAX"
+      | "OTHER";
+    componentName: string;
+    amount: number;
+    isTaxable?: boolean;
+    displayOrder?: number;
+    notes?: string | null;
+  }>;
+};
+
+export type UpdateSalaryPaymentInput = Partial<CreateSalaryPaymentInput>;
+
+export type CreateReimbursementClaimInput = {
+  userId: string;
+  claimNo: string;
+  title: string;
+  categoryId?: string | null;
+  linkedTransactionId?: string | null;
+  description?: string | null;
+  claimDate: string;
+  amountClaimed: number;
+  amountReceived?: number;
+  receivedDate?: string | null;
+  employerName?: string | null;
+  isTaxDeductible?: boolean;
+  status?: "PENDING" | "APPROVED" | "RECEIVED" | "REJECTED" | "CANCELLED";
+  notes?: string | null;
+};
+
+export type UpdateReimbursementClaimInput = Partial<CreateReimbursementClaimInput>;
+
+export type CreateLiabilityAccountInput = {
+  userId: string;
+  accountName: string;
+  liabilityType: "LOAN" | "EMI" | "CREDIT_CARD" | "MORTGAGE" | "LEASE" | "OTHER";
+  lenderName?: string | null;
+  accountNumberMasked?: string | null;
+  principalAmount: number;
+  outstandingAmount: number;
+  interestRate?: number | null;
+  emiAmount?: number | null;
+  currencyCode?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  dueDay?: number | null;
+  status?: "ACTIVE" | "CLOSED" | "DEFAULTED";
+  isActive?: boolean;
+  notes?: string | null;
+};
+
+export type UpdateLiabilityAccountInput = Partial<CreateLiabilityAccountInput>;
+
+export type CreateLiabilityInstallmentInput = {
+  liabilityAccountId: string;
+  linkedTransactionId?: string | null;
+  installmentNo: number;
+  dueDate: string;
+  principalDue?: number;
+  interestDue?: number;
+  totalDue: number;
+  amountPaid?: number;
+  paidDate?: string | null;
+  status?: "PENDING" | "PARTIAL" | "PAID" | "MISSED" | "CANCELLED";
+  notes?: string | null;
+};
+
+export type UpdateLiabilityInstallmentInput = Partial<CreateLiabilityInstallmentInput>;
+
+export type CreateMonthlyFinancialSnapshotInput = {
+  userId: string;
+  snapshotMonth: string;
+  currencyCode?: string;
+  totalIncome?: number;
+  totalExpense?: number;
+  totalSavings?: number;
+  totalAssets?: number;
+  totalLiabilities?: number;
+  netWorth?: number;
+  reimbursementPending?: number;
+  upcomingBills?: number;
+  healthScore?: number | null;
+  status?: "OPEN" | "LOCKED" | "ARCHIVED";
+  notes?: string | null;
+};
+
+export type UpdateMonthlyFinancialSnapshotInput = Partial<CreateMonthlyFinancialSnapshotInput>;
+
+export type CreateAuditLogInput = {
+  userId?: string | null;
+  entityName: string;
+  entityId?: string | null;
+  action: "CREATE" | "UPDATE" | "DELETE" | "ARCHIVE" | "RESTORE" | "IMPORT";
+  description?: string | null;
+  beforeData?: unknown;
+  afterData?: unknown;
+  createdBy?: string | null;
+};
+
+export type CreateImportJobInput = {
+  userId: string;
+  jobType: string;
+  sourceName?: string | null;
+  fileName?: string | null;
+  status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "PARTIAL";
+  totalRows?: number;
+  successRows?: number;
+  failedRows?: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  errorLog?: string | null;
+};
+
+export type UpdateImportJobInput = Partial<CreateImportJobInput>;

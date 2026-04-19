@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nurse Duty Planner - User Guide</title>
+  <style>
+    :root {
+      --blue: #1d4ed8;
+      --cyan: #0891b2;
+      --violet: #7c3aed;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbeafe;
+      --bg: #f8fbff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: white;
+      line-height: 1.55;
+    }
+    .page {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 42px 48px;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--blue), var(--violet), var(--cyan));
+      color: white;
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+    .hero p {
+      margin: 6px 0;
+      font-size: 15px;
+      opacity: 0.98;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    h2 {
+      font-size: 22px;
+      margin-top: 28px;
+      margin-bottom: 10px;
+      color: var(--blue);
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 6px;
+    }
+    h3 {
+      font-size: 17px;
+      margin-bottom: 6px;
+      margin-top: 18px;
+      color: #1e293b;
+    }
+    p { color: #1f2937; }
+    ul, ol { margin-top: 8px; }
+    li { margin-bottom: 6px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .note {
+      background: #ecfeff;
+      border-left: 4px solid var(--cyan);
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #dbe3f0;
+      text-align: left;
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #eff6ff;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #cbd5e1;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media print {
+      .page { padding: 20px 24px 28px; }
+      h2 { break-after: avoid; }
+      .card, table { break-inside: avoid; }
+    }
+    @media (max-width: 700px) {
+      .grid { grid-template-columns: 1fr; }
+      .page { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">User Guide</div>
+      <h1>Nurse Duty Planner</h1>
+      <p>A simple guide to help any staff member understand and use the app confidently.</p>
+      <p>This guide covers duty scheduling, shift setup, duty types, settings, and the money planning area.</p>
+    </section>
+
+    <h2>1. What this app is for</h2>
+    <p>Nurse Duty Planner is a mobile-friendly planning app designed to help care teams organize daily duties and review related planning information in one place.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Scheduling</h3>
+        <ul>
+          <li>View a dashboard of duties</li>
+          <li>Create and update duty plans</li>
+          <li>Manage shifts and duty types</li>
+          <li>Set weekly planning rules</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Money Planning</h3>
+        <ul>
+          <li>Track accounts and balances</li>
+          <li>Record transactions</li>
+          <li>Plan budgets</li>
+          <li>Manage reminders and recurring entries</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>2. Main navigation</h2>
+    <p>The bottom menu is the fastest way to move around the app.</p>
+    <table>
+      <thead>
+        <tr><th>Menu</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Home</td><td>Shows the dashboard summary and date-based overview of duties.</td></tr>
+        <tr><td>Duties</td><td>Add, edit, filter, and review nurse duty assignments.</td></tr>
+        <tr><td>Shifts</td><td>Create working shifts such as morning, evening, or night.</td></tr>
+        <tr><td>Types</td><td>Define duty categories and colors for easy identification.</td></tr>
+        <tr><td>Money</td><td>Manage finances, transactions, budgets, reminders, and reference data.</td></tr>
+        <tr><td>Settings</td><td>Set weekly hours, week start and end, overtime rate, and day-off rate.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Quick start for new users</h2>
+    <ol>
+      <li>Open <strong>Shifts</strong> and create the shift windows your team uses.</li>
+      <li>Open <strong>Types</strong> and add the duty categories you want to assign.</li>
+      <li>Go to <strong>Settings</strong> and confirm weekly hours and rate rules.</li>
+      <li>Open <strong>Duties</strong> and add duty records for the required dates.</li>
+      <li>Return to <strong>Home</strong> to review the dashboard and workload summary.</li>
+      <li>If needed, open <strong>Money</strong> to manage budgets, accounts, and transactions.</li>
+    </ol>
+
+    <h2>4. How to use each section</h2>
+
+    <h3>Home dashboard</h3>
+    <ul>
+      <li>Shows total duties, shift groups, and duty types for the selected date range.</li>
+      <li>You can review trends for this week, last week, this month, last month, or all records.</li>
+      <li>Use it as a quick overview screen for planning and monitoring.</li>
+    </ul>
+
+    <h3>Duty Plans</h3>
+    <ul>
+      <li>Select <strong>Add Duty</strong> to create a new duty entry.</li>
+      <li>Enter the duty date, shift, start time, end time, and duty type.</li>
+      <li>Use filters to narrow results by date, shift, or duty type.</li>
+      <li>You can edit an entry by opening it and update it when needed.</li>
+      <li>You can delete a duty if it is no longer required.</li>
+      <li>The page uses paging, so move between pages when reviewing more records.</li>
+    </ul>
+
+    <h3>Shifts</h3>
+    <ul>
+      <li>Add named shifts such as Morning, Evening, or Night.</li>
+      <li>Set start and end times clearly.</li>
+      <li>Mark a shift as active or inactive.</li>
+      <li>Choose a color to make the shift easier to recognize in the interface.</li>
+    </ul>
+
+    <h3>Duty Types</h3>
+    <ul>
+      <li>Create labels for different kinds of duties.</li>
+      <li>Assign colors for quick visual recognition.</li>
+      <li>Mark duty types as active or inactive to control current use.</li>
+    </ul>
+
+    <h3>Duty Settings</h3>
+    <ul>
+      <li>Set the minimum weekly hours target.</li>
+      <li>Choose the official start and end day of the work week.</li>
+      <li>Define overtime and day-off rates.</li>
+      <li>Save changes after updating any value.</li>
+    </ul>
+
+    <h3>Money section</h3>
+    <p>This area works like a compact finance workspace for personal or operational tracking.</p>
+    <ul>
+      <li><strong>Overview:</strong> View balance, income, expense, and net cash flow.</li>
+      <li><strong>Transactions:</strong> Record income, expenses, and transfers.</li>
+      <li><strong>Accounts:</strong> Manage bank or cash accounts and balances.</li>
+      <li><strong>Planning:</strong> Work with budgets, reminders, and recurring items.</li>
+      <li><strong>Masters:</strong> Maintain users, categories, merchants, and tags.</li>
+    </ul>
+
+    <h2>5. Common tasks</h2>
+
+    <div class="card">
+      <h3>To create a shift</h3>
+      <ol>
+        <li>Open Shifts.</li>
+        <li>Select Add Shift.</li>
+        <li>Enter the shift name, time range, color, and status.</li>
+        <li>Save the record.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>To add a duty plan</h3>
+      <ol>
+        <li>Open Duties.</li>
+        <li>Select Add Duty.</li>
+        <li>Fill in date, shift, duty type, and times.</li>
+        <li>Save the duty.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>To review finance activity</h3>
+      <ol>
+        <li>Open Money.</li>
+        <li>Choose the user and date range if prompted.</li>
+        <li>Review the overview cards for balances and cash flow.</li>
+        <li>Use the tabs to move to transactions, accounts, or planning tools.</li>
+      </ol>
+    </div>
+
+    <h2>6. Good practice tips</h2>
+    <ul>
+      <li>Create shifts and duty types first before entering many duties.</li>
+      <li>Use clear names and colors so staff can recognize entries faster.</li>
+      <li>Review the Home screen regularly to spot workload changes.</li>
+      <li>Keep inactive items instead of deleting them when you may need them later.</li>
+      <li>Check settings after any policy or rate change.</li>
+    </ul>
+
+    <div class="note">
+      <strong>Tip:</strong> If something does not appear correctly, use the refresh or filter reset option and check that the correct date range is selected.
+    </div>
+
+    <h2>7. Troubleshooting</h2>
+    <table>
+      <thead>
+        <tr><th>Issue</th><th>What to check</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>No duties shown</td><td>Check the selected date range and applied filters.</td></tr>
+        <tr><td>Shift or type missing</td><td>Verify that it has been created and is marked active.</td></tr>
+        <tr><td>Wrong totals on dashboard</td><td>Refresh the page and confirm the active date period.</td></tr>
+        <tr><td>Money records not matching expectations</td><td>Review the selected user, account, category, and transaction dates.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>8. Summary</h2>
+    <p>Nurse Duty Planner is designed to make staff scheduling easier to manage and easier to understand. Once shifts, duty types, and settings are configured, the app becomes a simple daily tool for planning and review.</p>
+
+    <div class="footer">
+      Prepared on 19 April 2026 for this project workspace.
+    </div>
+  </div>
+</body>
+</html>

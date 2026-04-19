@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       where: omitUndefined({
         userId: userId ?? undefined,
       }),
-      orderBy: [{ name: "asc" }],
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
     });
 
     return NextResponse.json(merchants);
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         merchantType: body.merchantType,
         contactNo: body.contactNo,
         notes: body.notes,
+        isActive: body.isActive ?? true,
       },
     });
 

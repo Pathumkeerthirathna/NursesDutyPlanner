@@ -129,9 +129,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    await prisma.transaction.delete({ where: { id } });
+    await prisma.transaction.update({
+      where: { id },
+      data: { status: "VOID" },
+    });
 
-    return NextResponse.json({ deletedId: id });
+    return NextResponse.json({ deletedId: id, archived: true });
   } catch (error) {
     return handleRouteError(error, "delete transaction");
   }

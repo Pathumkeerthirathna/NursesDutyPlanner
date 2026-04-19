@@ -21,7 +21,7 @@ type Notice = {
   message: string;
 } | null;
 
-type TabKey = "overview" | "transactions" | "accounts" | "planning" | "masters";
+type TabKey = "overview" | "transactions" | "accounts" | "planning" | "professional" | "masters";
 
 type HealthCheck = {
   status: string;
@@ -38,6 +38,9 @@ type DashboardSummary = {
   totalIncome: number;
   totalExpense: number;
   netCashFlow: number;
+  investmentValue: number;
+  totalLiabilities: number;
+  pendingReimbursement: number;
 };
 
 type MoneyUser = {
@@ -139,6 +142,128 @@ type Reminder = {
   status: string;
   isPaid: boolean;
   category?: MoneyCategory | null;
+};
+
+type SavingsGoal = {
+  id: string;
+  goalName: string;
+  targetAmount: number | string;
+  currentAmount: number | string;
+  currencyCode: string;
+  targetDate?: string | null;
+  status: string;
+  isActive: boolean;
+};
+
+type IncomeSource = {
+  id: string;
+  sourceName: string;
+  sourceType?: string | null;
+  employerName?: string | null;
+  defaultAmount?: number | string | null;
+  payDay?: number | null;
+  isActive: boolean;
+};
+
+type SalaryComponent = {
+  id: string;
+  componentType: string;
+  componentName: string;
+  amount: number | string;
+};
+
+type SalaryPayment = {
+  id: string;
+  salaryMonth: string;
+  payDate: string;
+  grossAmount: number | string;
+  deductionAmount: number | string;
+  netAmount: number | string;
+  currencyCode: string;
+  status: string;
+  incomeSource?: IncomeSource | null;
+  components: SalaryComponent[];
+};
+
+type ReimbursementClaim = {
+  id: string;
+  claimNo: string;
+  title: string;
+  claimDate: string;
+  amountClaimed: number | string;
+  amountReceived: number | string;
+  employerName?: string | null;
+  status: string;
+  isTaxDeductible: boolean;
+  category?: MoneyCategory | null;
+};
+
+type LiabilityInstallment = {
+  id: string;
+  installmentNo: number;
+  dueDate: string;
+  totalDue: number | string;
+  amountPaid: number | string;
+  status: string;
+};
+
+type LiabilityAccount = {
+  id: string;
+  accountName: string;
+  liabilityType: string;
+  lenderName?: string | null;
+  outstandingAmount: number | string;
+  currencyCode: string;
+  emiAmount?: number | string | null;
+  dueDay?: number | null;
+  status: string;
+  isActive: boolean;
+  installments: LiabilityInstallment[];
+};
+
+type InvestmentAccount = {
+  id: string;
+  accountName: string;
+  accountType: string;
+  institutionName?: string | null;
+  currentValue: number | string;
+  costBasis: number | string;
+  currencyCode: string;
+  isArchived: boolean;
+};
+
+type MonthlyFinancialSnapshot = {
+  id: string;
+  snapshotMonth: string;
+  totalIncome: number | string;
+  totalExpense: number | string;
+  totalAssets: number | string;
+  totalLiabilities: number | string;
+  netWorth: number | string;
+  healthScore?: number | null;
+  status: string;
+  currencyCode: string;
+};
+
+type AuditLogItem = {
+  id: string;
+  entityName: string;
+  entityId?: string | null;
+  action: string;
+  description?: string | null;
+  createdAt: string;
+};
+
+type ImportJob = {
+  id: string;
+  jobType: string;
+  sourceName?: string | null;
+  fileName?: string | null;
+  status: string;
+  totalRows: number;
+  successRows: number;
+  failedRows: number;
+  createdAt: string;
 };
 
 function formatDateInput(date: Date) {
@@ -244,6 +369,15 @@ export default function MoneyPlannerWorkspace() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringTemplate[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [incomeSources, setIncomeSources] = useState<IncomeSource[]>([]);
+  const [salaryPayments, setSalaryPayments] = useState<SalaryPayment[]>([]);
+  const [reimbursements, setReimbursements] = useState<ReimbursementClaim[]>([]);
+  const [liabilities, setLiabilities] = useState<LiabilityAccount[]>([]);
+  const [investmentAccounts, setInvestmentAccounts] = useState<InvestmentAccount[]>([]);
+  const [monthlySnapshots, setMonthlySnapshots] = useState<MonthlyFinancialSnapshot[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [importJobs, setImportJobs] = useState<ImportJob[]>([]);
 
   const [selectedUserId, setSelectedUserId] = useState("");
   const [dateRange, setDateRange] = useState({
@@ -336,10 +470,75 @@ export default function MoneyPlannerWorkspace() {
     status: "PENDING",
   });
 
+  const [goalForm, setGoalForm] = useState({
+    goalName: "",
+    targetAmount: "0",
+    currentAmount: "0",
+    targetDate: formatDateInput(monthEnd),
+  });
+
+  const [incomeSourceForm, setIncomeSourceForm] = useState({
+    sourceName: "",
+    sourceType: "SALARY",
+    employerName: "",
+    defaultAmount: "0",
+    payDay: "25",
+  });
+
+  const [salaryPaymentForm, setSalaryPaymentForm] = useState({
+    incomeSourceId: "",
+    salaryMonth: formatDateInput(monthStart),
+    payDate: formatDateInput(today),
+    basicAmount: "0",
+    allowanceAmount: "0",
+    bonusAmount: "0",
+    overtimeAmount: "0",
+    deductionAmount: "0",
+  });
+
+  const [reimbursementForm, setReimbursementForm] = useState({
+    claimNo: `CLM-${Date.now()}`,
+    title: "",
+    claimDate: formatDateInput(today),
+    amountClaimed: "0",
+    employerName: "",
+    categoryId: "",
+  });
+
+  const [liabilityForm, setLiabilityForm] = useState({
+    accountName: "",
+    liabilityType: "LOAN",
+    lenderName: "",
+    principalAmount: "0",
+    outstandingAmount: "0",
+    emiAmount: "0",
+    dueDay: "5",
+  });
+
+  const [investmentForm, setInvestmentForm] = useState({
+    accountName: "",
+    accountType: "STOCK",
+    institutionName: "",
+    costBasis: "0",
+    currentValue: "0",
+  });
+
+  const [snapshotForm, setSnapshotForm] = useState({
+    snapshotMonth: formatDateInput(monthStart),
+    totalIncome: "0",
+    totalExpense: "0",
+    totalAssets: "0",
+    totalLiabilities: "0",
+    netWorth: "0",
+    healthScore: "80",
+  });
+
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
   const activeAccounts = accounts.filter((account) => !account.isArchived);
   const expenseCategories = categories.filter((category) => category.type === "EXPENSE");
   const pendingReminders = reminders.filter((reminder) => !reminder.isPaid).length;
+  const professionalCount =
+    savingsGoals.length + salaryPayments.length + reimbursements.length + liabilities.length + investmentAccounts.length;
 
   const tabItems = [
     {
@@ -369,6 +568,13 @@ export default function MoneyPlannerWorkspace() {
       hint: "Budgets",
       icon: PiggyBank,
       metric: `${budgets.length + reminders.length}`,
+    },
+    {
+      id: "professional" as const,
+      label: "Pro",
+      hint: "Salary & wealth",
+      icon: ShieldCheck,
+      metric: `${professionalCount}`,
     },
     {
       id: "masters" as const,
@@ -404,6 +610,15 @@ export default function MoneyPlannerWorkspace() {
         budgetsData,
         recurringData,
         remindersData,
+        savingsGoalsData,
+        incomeSourcesData,
+        salaryPaymentsData,
+        reimbursementsData,
+        liabilitiesData,
+        investmentAccountsData,
+        snapshotsData,
+        auditLogsData,
+        importJobsData,
         dashboardData,
       ] = await Promise.all([
         fetchJson<MoneyCategory[]>(`/api/money/categories${query}`),
@@ -414,6 +629,15 @@ export default function MoneyPlannerWorkspace() {
         fetchJson<Budget[]>(`/api/money/budgets${query}`),
         fetchJson<RecurringTemplate[]>(`/api/money/recurring${query}`),
         fetchJson<Reminder[]>(`/api/money/reminders${query}`),
+        fetchJson<SavingsGoal[]>(`/api/money/savings-goals${query}`),
+        fetchJson<IncomeSource[]>(`/api/money/income-sources${query}`),
+        fetchJson<SalaryPayment[]>(`/api/money/salary-payments${query}`),
+        fetchJson<ReimbursementClaim[]>(`/api/money/reimbursements${query}`),
+        fetchJson<LiabilityAccount[]>(`/api/money/liabilities${query}`),
+        fetchJson<InvestmentAccount[]>(`/api/money/investment-accounts${query}`),
+        fetchJson<MonthlyFinancialSnapshot[]>(`/api/money/snapshots${query}`),
+        fetchJson<AuditLogItem[]>(`/api/money/audit-logs${query}`),
+        fetchJson<ImportJob[]>(`/api/money/import-jobs${query}`),
         fetchJson<DashboardSummary>(`/api/money/dashboard${rangeQuery}`),
       ]);
 
@@ -425,6 +649,15 @@ export default function MoneyPlannerWorkspace() {
       setBudgets(budgetsData);
       setRecurringTemplates(recurringData);
       setReminders(remindersData);
+      setSavingsGoals(savingsGoalsData);
+      setIncomeSources(incomeSourcesData);
+      setSalaryPayments(salaryPaymentsData);
+      setReimbursements(reimbursementsData);
+      setLiabilities(liabilitiesData);
+      setInvestmentAccounts(investmentAccountsData);
+      setMonthlySnapshots(snapshotsData);
+      setAuditLogs(auditLogsData);
+      setImportJobs(importJobsData);
       setSummary(dashboardData);
     },
     [dateRange.fromDate, dateRange.toDate]
@@ -809,6 +1042,237 @@ export default function MoneyPlannerWorkspace() {
     }
   }
 
+  async function handleGoalSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/savings-goals", "POST", {
+        userId: selectedUserId,
+        goalName: goalForm.goalName,
+        targetAmount: toNumberOrUndefined(goalForm.targetAmount) ?? 0,
+        currentAmount: toNumberOrUndefined(goalForm.currentAmount) ?? 0,
+        targetDate: goalForm.targetDate || undefined,
+      });
+
+      await loadMoneyData(selectedUserId);
+      setGoalForm({
+        goalName: "",
+        targetAmount: "0",
+        currentAmount: "0",
+        targetDate: formatDateInput(monthEnd),
+      });
+      setNotice({ type: "success", message: "Savings goal added." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to create savings goal.",
+      });
+    }
+  }
+
+  async function handleIncomeSourceSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/income-sources", "POST", {
+        userId: selectedUserId,
+        sourceName: incomeSourceForm.sourceName,
+        sourceType: incomeSourceForm.sourceType,
+        employerName: incomeSourceForm.employerName || undefined,
+        defaultAmount: toNumberOrUndefined(incomeSourceForm.defaultAmount),
+        payDay: toNumberOrUndefined(incomeSourceForm.payDay),
+      });
+
+      await loadMoneyData(selectedUserId);
+      setIncomeSourceForm({
+        sourceName: "",
+        sourceType: "SALARY",
+        employerName: "",
+        defaultAmount: "0",
+        payDay: "25",
+      });
+      setNotice({ type: "success", message: "Income source added." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to create income source.",
+      });
+    }
+  }
+
+  async function handleSalaryPaymentSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    const components = [
+      { componentType: "BASIC", componentName: "Basic Salary", amount: toNumberOrUndefined(salaryPaymentForm.basicAmount) ?? 0 },
+      { componentType: "ALLOWANCE", componentName: "Allowances", amount: toNumberOrUndefined(salaryPaymentForm.allowanceAmount) ?? 0 },
+      { componentType: "BONUS", componentName: "Bonus", amount: toNumberOrUndefined(salaryPaymentForm.bonusAmount) ?? 0 },
+      { componentType: "OVERTIME", componentName: "Overtime", amount: toNumberOrUndefined(salaryPaymentForm.overtimeAmount) ?? 0 },
+      { componentType: "DEDUCTION", componentName: "Deductions", amount: toNumberOrUndefined(salaryPaymentForm.deductionAmount) ?? 0 },
+    ].filter((item) => item.amount > 0);
+
+    try {
+      await sendJson("/api/money/salary-payments", "POST", {
+        userId: selectedUserId,
+        incomeSourceId: salaryPaymentForm.incomeSourceId || undefined,
+        salaryMonth: salaryPaymentForm.salaryMonth,
+        payDate: salaryPaymentForm.payDate,
+        basicAmount: toNumberOrUndefined(salaryPaymentForm.basicAmount) ?? 0,
+        components,
+      });
+
+      await loadMoneyData(selectedUserId);
+      setSalaryPaymentForm({
+        incomeSourceId: "",
+        salaryMonth: formatDateInput(monthStart),
+        payDate: formatDateInput(today),
+        basicAmount: "0",
+        allowanceAmount: "0",
+        bonusAmount: "0",
+        overtimeAmount: "0",
+        deductionAmount: "0",
+      });
+      setNotice({ type: "success", message: "Salary payment recorded." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to save salary payment.",
+      });
+    }
+  }
+
+  async function handleReimbursementSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/reimbursements", "POST", {
+        userId: selectedUserId,
+        claimNo: reimbursementForm.claimNo,
+        title: reimbursementForm.title,
+        claimDate: reimbursementForm.claimDate,
+        amountClaimed: toNumberOrUndefined(reimbursementForm.amountClaimed) ?? 0,
+        employerName: reimbursementForm.employerName || undefined,
+        categoryId: reimbursementForm.categoryId || undefined,
+        isTaxDeductible: true,
+      });
+
+      await loadMoneyData(selectedUserId);
+      setReimbursementForm({
+        claimNo: `CLM-${Date.now()}`,
+        title: "",
+        claimDate: formatDateInput(today),
+        amountClaimed: "0",
+        employerName: "",
+        categoryId: "",
+      });
+      setNotice({ type: "success", message: "Reimbursement claim added." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to create reimbursement claim.",
+      });
+    }
+  }
+
+  async function handleLiabilitySubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/liabilities", "POST", {
+        userId: selectedUserId,
+        accountName: liabilityForm.accountName,
+        liabilityType: liabilityForm.liabilityType,
+        lenderName: liabilityForm.lenderName || undefined,
+        principalAmount: toNumberOrUndefined(liabilityForm.principalAmount) ?? 0,
+        outstandingAmount: toNumberOrUndefined(liabilityForm.outstandingAmount) ?? 0,
+        emiAmount: toNumberOrUndefined(liabilityForm.emiAmount),
+        dueDay: toNumberOrUndefined(liabilityForm.dueDay),
+      });
+
+      await loadMoneyData(selectedUserId);
+      setLiabilityForm({
+        accountName: "",
+        liabilityType: "LOAN",
+        lenderName: "",
+        principalAmount: "0",
+        outstandingAmount: "0",
+        emiAmount: "0",
+        dueDay: "5",
+      });
+      setNotice({ type: "success", message: "Liability account added." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to create liability account.",
+      });
+    }
+  }
+
+  async function handleInvestmentSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/investment-accounts", "POST", {
+        userId: selectedUserId,
+        accountName: investmentForm.accountName,
+        accountType: investmentForm.accountType,
+        institutionName: investmentForm.institutionName || undefined,
+        costBasis: toNumberOrUndefined(investmentForm.costBasis) ?? 0,
+        currentValue: toNumberOrUndefined(investmentForm.currentValue) ?? 0,
+      });
+
+      await loadMoneyData(selectedUserId);
+      setInvestmentForm({
+        accountName: "",
+        accountType: "STOCK",
+        institutionName: "",
+        costBasis: "0",
+        currentValue: "0",
+      });
+      setNotice({ type: "success", message: "Investment account added." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to create investment account.",
+      });
+    }
+  }
+
+  async function handleSnapshotSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedUserId) return;
+
+    try {
+      await sendJson("/api/money/snapshots", "POST", {
+        userId: selectedUserId,
+        snapshotMonth: snapshotForm.snapshotMonth,
+        totalIncome: toNumberOrUndefined(snapshotForm.totalIncome) ?? 0,
+        totalExpense: toNumberOrUndefined(snapshotForm.totalExpense) ?? 0,
+        totalAssets: toNumberOrUndefined(snapshotForm.totalAssets) ?? 0,
+        totalLiabilities: toNumberOrUndefined(snapshotForm.totalLiabilities) ?? 0,
+        netWorth:
+          toNumberOrUndefined(snapshotForm.netWorth) ??
+          (toNumberOrUndefined(snapshotForm.totalAssets) ?? 0) -
+            (toNumberOrUndefined(snapshotForm.totalLiabilities) ?? 0),
+        healthScore: toNumberOrUndefined(snapshotForm.healthScore),
+      });
+
+      await loadMoneyData(selectedUserId);
+      setNotice({ type: "success", message: "Monthly snapshot saved." });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        message: error instanceof Error ? error.message : "Failed to save monthly snapshot.",
+      });
+    }
+  }
+
   return (
     <div className="page-shell space-y-6">
       <section className="hero-card hero-card--emerald overflow-hidden">
@@ -946,7 +1410,7 @@ export default function MoneyPlannerWorkspace() {
         </div>
 
         <div className="mt-4 rounded-2xl bg-slate-100/90 p-2">
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 xl:grid-cols-6">
             {tabItems.map(({ id, label, hint, icon: Icon, metric }) => {
               const isActive = activeTab === id;
 
@@ -983,7 +1447,7 @@ export default function MoneyPlannerWorkspace() {
                 <h2 className="text-lg font-semibold">Portfolio snapshot</h2>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <div className="stat-card tinted-card-emerald">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Cash flow</p>
                   <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -1009,6 +1473,22 @@ export default function MoneyPlannerWorkspace() {
                     {budgets.length + recurringTemplates.length + reminders.length}
                   </p>
                   <p className="text-xs text-slate-500">Budgets, recurring schedules and reminders</p>
+                </div>
+                <div className="stat-card tinted-card-blue">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Investment value</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">
+                    {formatMoneyValue(summary?.investmentValue)}
+                  </p>
+                  <p className="text-xs text-slate-500">Tracked growth and wealth holdings</p>
+                </div>
+                <div className="stat-card tinted-card-rose">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Liabilities</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">
+                    {formatMoneyValue(summary?.totalLiabilities)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Pending reimbursement {formatMoneyValue(summary?.pendingReimbursement)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1933,6 +2413,292 @@ export default function MoneyPlannerWorkspace() {
         </section>
       ) : null}
 
+      {activeTab === "professional" ? (
+        <div className="space-y-5">
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <PiggyBank size={17} className="text-emerald-600" />
+                <h2 className="text-lg font-semibold">Savings goals</h2>
+              </div>
+              <form onSubmit={handleGoalSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input placeholder="Goal name" value={goalForm.goalName} onChange={(event) => setGoalForm((current) => ({ ...current, goalName: event.target.value }))} className="w-full px-3 py-2" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Target amount" value={goalForm.targetAmount} onChange={(event) => setGoalForm((current) => ({ ...current, targetAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Current amount" value={goalForm.currentAmount} onChange={(event) => setGoalForm((current) => ({ ...current, currentAmount: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <input type="date" value={goalForm.targetDate} onChange={(event) => setGoalForm((current) => ({ ...current, targetDate: event.target.value }))} className="w-full px-3 py-2" />
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save goal</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {savingsGoals.slice(0, 5).map((goal) => (
+                  <div key={goal.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{goal.goalName}</p>
+                      <button type="button" onClick={() => void handleDelete("savings-goals", goal.id, goal.goalName)} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">{formatMoneyValue(goal.currentAmount, goal.currencyCode)} of {formatMoneyValue(goal.targetAmount, goal.currencyCode)} · {goal.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <Users size={17} className="text-blue-600" />
+                <h2 className="text-lg font-semibold">Income sources</h2>
+              </div>
+              <form onSubmit={handleIncomeSourceSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input placeholder="Source name" value={incomeSourceForm.sourceName} onChange={(event) => setIncomeSourceForm((current) => ({ ...current, sourceName: event.target.value }))} className="w-full px-3 py-2" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input placeholder="Type" value={incomeSourceForm.sourceType} onChange={(event) => setIncomeSourceForm((current) => ({ ...current, sourceType: event.target.value }))} className="px-3 py-2" />
+                    <input placeholder="Employer" value={incomeSourceForm.employerName} onChange={(event) => setIncomeSourceForm((current) => ({ ...current, employerName: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Default amount" value={incomeSourceForm.defaultAmount} onChange={(event) => setIncomeSourceForm((current) => ({ ...current, defaultAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Pay day" value={incomeSourceForm.payDay} onChange={(event) => setIncomeSourceForm((current) => ({ ...current, payDay: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save income source</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {incomeSources.slice(0, 5).map((source) => (
+                  <div key={source.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{source.sourceName}</p>
+                      <button type="button" onClick={() => void handleDelete("income-sources", source.id, source.sourceName)} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">{source.sourceType || "General"} · payday {source.payDay ?? "—"} · {formatMoneyValue(source.defaultAmount)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <Wallet size={17} className="text-violet-600" />
+                <h2 className="text-lg font-semibold">Salary breakdown</h2>
+              </div>
+              <form onSubmit={handleSalaryPaymentSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={salaryPaymentForm.incomeSourceId} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, incomeSourceId: event.target.value }))} className="px-3 py-2">
+                      <option value="">Income source</option>
+                      {incomeSources.map((source) => <option key={source.id} value={source.id}>{source.sourceName}</option>)}
+                    </select>
+                    <input type="date" value={salaryPaymentForm.payDate} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, payDate: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <input type="date" value={salaryPaymentForm.salaryMonth} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, salaryMonth: event.target.value }))} className="w-full px-3 py-2" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Basic" value={salaryPaymentForm.basicAmount} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, basicAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Allowance" value={salaryPaymentForm.allowanceAmount} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, allowanceAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Bonus" value={salaryPaymentForm.bonusAmount} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, bonusAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Overtime" value={salaryPaymentForm.overtimeAmount} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, overtimeAmount: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <input type="number" placeholder="Deduction" value={salaryPaymentForm.deductionAmount} onChange={(event) => setSalaryPaymentForm((current) => ({ ...current, deductionAmount: event.target.value }))} className="w-full px-3 py-2" />
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save salary payment</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {salaryPayments.slice(0, 5).map((payment) => (
+                  <div key={payment.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{payment.incomeSource?.sourceName || "Salary payment"}</p>
+                      <button type="button" onClick={() => void handleDelete("salary-payments", payment.id, "salary payment")} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">Net {formatMoneyValue(payment.netAmount, payment.currencyCode)} · {formatDateLabel(payment.payDate)} · {payment.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <BellRing size={17} className="text-amber-600" />
+                <h2 className="text-lg font-semibold">Reimbursements</h2>
+              </div>
+              <form onSubmit={handleReimbursementSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input placeholder="Claim title" value={reimbursementForm.title} onChange={(event) => setReimbursementForm((current) => ({ ...current, title: event.target.value }))} className="w-full px-3 py-2" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input placeholder="Claim no" value={reimbursementForm.claimNo} onChange={(event) => setReimbursementForm((current) => ({ ...current, claimNo: event.target.value }))} className="px-3 py-2" required />
+                    <input type="date" value={reimbursementForm.claimDate} onChange={(event) => setReimbursementForm((current) => ({ ...current, claimDate: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <input type="number" placeholder="Amount claimed" value={reimbursementForm.amountClaimed} onChange={(event) => setReimbursementForm((current) => ({ ...current, amountClaimed: event.target.value }))} className="w-full px-3 py-2" />
+                  <input placeholder="Employer" value={reimbursementForm.employerName} onChange={(event) => setReimbursementForm((current) => ({ ...current, employerName: event.target.value }))} className="w-full px-3 py-2" />
+                  <select value={reimbursementForm.categoryId} onChange={(event) => setReimbursementForm((current) => ({ ...current, categoryId: event.target.value }))} className="w-full px-3 py-2">
+                    <option value="">Category</option>
+                    {expenseCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save reimbursement</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {reimbursements.slice(0, 5).map((claim) => (
+                  <div key={claim.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{claim.title}</p>
+                      <button type="button" onClick={() => void handleDelete("reimbursements", claim.id, claim.title)} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">{claim.claimNo} · {formatMoneyValue(claim.amountClaimed)} · {claim.status}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <Landmark size={17} className="text-rose-600" />
+                <h2 className="text-lg font-semibold">Liabilities & EMI</h2>
+              </div>
+              <form onSubmit={handleLiabilitySubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input placeholder="Liability name" value={liabilityForm.accountName} onChange={(event) => setLiabilityForm((current) => ({ ...current, accountName: event.target.value }))} className="w-full px-3 py-2" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={liabilityForm.liabilityType} onChange={(event) => setLiabilityForm((current) => ({ ...current, liabilityType: event.target.value }))} className="px-3 py-2">
+                      <option value="LOAN">Loan</option>
+                      <option value="EMI">EMI</option>
+                      <option value="CREDIT_CARD">Credit Card</option>
+                      <option value="MORTGAGE">Mortgage</option>
+                    </select>
+                    <input placeholder="Lender" value={liabilityForm.lenderName} onChange={(event) => setLiabilityForm((current) => ({ ...current, lenderName: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Principal" value={liabilityForm.principalAmount} onChange={(event) => setLiabilityForm((current) => ({ ...current, principalAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Outstanding" value={liabilityForm.outstandingAmount} onChange={(event) => setLiabilityForm((current) => ({ ...current, outstandingAmount: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="EMI amount" value={liabilityForm.emiAmount} onChange={(event) => setLiabilityForm((current) => ({ ...current, emiAmount: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Due day" value={liabilityForm.dueDay} onChange={(event) => setLiabilityForm((current) => ({ ...current, dueDay: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save liability</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {liabilities.slice(0, 5).map((liability) => (
+                  <div key={liability.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{liability.accountName}</p>
+                      <button type="button" onClick={() => void handleDelete("liabilities", liability.id, liability.accountName)} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">{liability.liabilityType} · {formatMoneyValue(liability.outstandingAmount, liability.currencyCode)} · due day {liability.dueDay ?? "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <Activity size={17} className="text-cyan-600" />
+                <h2 className="text-lg font-semibold">Investments & wealth</h2>
+              </div>
+              <form onSubmit={handleInvestmentSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input placeholder="Investment name" value={investmentForm.accountName} onChange={(event) => setInvestmentForm((current) => ({ ...current, accountName: event.target.value }))} className="w-full px-3 py-2" required />
+                  <div className="grid grid-cols-2 gap-3">
+                    <select value={investmentForm.accountType} onChange={(event) => setInvestmentForm((current) => ({ ...current, accountType: event.target.value }))} className="px-3 py-2">
+                      <option value="STOCK">Stock</option>
+                      <option value="MUTUAL_FUND">Mutual Fund</option>
+                      <option value="ETF">ETF</option>
+                      <option value="RETIREMENT">Retirement</option>
+                      <option value="FIXED_DEPOSIT">Fixed Deposit</option>
+                    </select>
+                    <input placeholder="Institution" value={investmentForm.institutionName} onChange={(event) => setInvestmentForm((current) => ({ ...current, institutionName: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Cost basis" value={investmentForm.costBasis} onChange={(event) => setInvestmentForm((current) => ({ ...current, costBasis: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Current value" value={investmentForm.currentValue} onChange={(event) => setInvestmentForm((current) => ({ ...current, currentValue: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save investment</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {investmentAccounts.slice(0, 5).map((account) => (
+                  <div key={account.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-medium text-slate-800">{account.accountName}</p>
+                      <button type="button" onClick={() => void handleDelete("investment-accounts", account.id, account.accountName)} className="rounded-lg bg-rose-100 px-2 py-1 text-rose-700"><Trash2 size={14} /></button>
+                    </div>
+                    <p className="text-xs text-slate-500">{account.accountType} · {formatMoneyValue(account.currentValue, account.currencyCode)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <ShieldCheck size={17} className="text-emerald-600" />
+                <h2 className="text-lg font-semibold">Monthly snapshot</h2>
+              </div>
+              <form onSubmit={handleSnapshotSubmit} className="space-y-3">
+                <fieldset disabled={!selectedUserId} className="space-y-3 disabled:opacity-60">
+                  <input type="date" value={snapshotForm.snapshotMonth} onChange={(event) => setSnapshotForm((current) => ({ ...current, snapshotMonth: event.target.value }))} className="w-full px-3 py-2" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Total income" value={snapshotForm.totalIncome} onChange={(event) => setSnapshotForm((current) => ({ ...current, totalIncome: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Total expense" value={snapshotForm.totalExpense} onChange={(event) => setSnapshotForm((current) => ({ ...current, totalExpense: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Assets" value={snapshotForm.totalAssets} onChange={(event) => setSnapshotForm((current) => ({ ...current, totalAssets: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Liabilities" value={snapshotForm.totalLiabilities} onChange={(event) => setSnapshotForm((current) => ({ ...current, totalLiabilities: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="number" placeholder="Net worth" value={snapshotForm.netWorth} onChange={(event) => setSnapshotForm((current) => ({ ...current, netWorth: event.target.value }))} className="px-3 py-2" />
+                    <input type="number" placeholder="Health score" value={snapshotForm.healthScore} onChange={(event) => setSnapshotForm((current) => ({ ...current, healthScore: event.target.value }))} className="px-3 py-2" />
+                  </div>
+                  <button type="submit" className="primary-btn w-full rounded-xl px-4 py-2"><PlusCircle size={16} /> Save snapshot</button>
+                </fieldset>
+              </form>
+              <div className="mt-4 space-y-2">
+                {monthlySnapshots.slice(0, 4).map((snapshot) => (
+                  <div key={snapshot.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                    <p className="font-medium text-slate-800">{formatDateLabel(snapshot.snapshotMonth)} · {snapshot.status}</p>
+                    <p className="text-xs text-slate-500">Net worth {formatMoneyValue(snapshot.netWorth, snapshot.currencyCode)} · score {snapshot.healthScore ?? "—"}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="section-card">
+              <div className="mb-3 flex items-center gap-2 text-slate-900">
+                <Tags size={17} className="text-slate-700" />
+                <h2 className="text-lg font-semibold">Audit & import logs</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-slate-800">Recent audit logs</p>
+                  <div className="space-y-2">
+                    {auditLogs.slice(0, 6).map((log) => (
+                      <div key={log.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                        <p className="text-sm font-medium text-slate-800">{log.entityName} · {log.action}</p>
+                        <p className="text-xs text-slate-500">{log.description || "No description"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 text-sm font-semibold text-slate-800">Import jobs</p>
+                  <div className="space-y-2">
+                    {importJobs.slice(0, 6).map((job) => (
+                      <div key={job.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                        <p className="text-sm font-medium text-slate-800">{job.jobType} · {job.status}</p>
+                        <p className="text-xs text-slate-500">Rows {job.successRows}/{job.totalRows} · failed {job.failedRows}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
       <section className="section-card">
         <div className="page-header">
           <div>
@@ -1954,6 +2720,15 @@ export default function MoneyPlannerWorkspace() {
             "/api/money/budgets",
             "/api/money/recurring",
             "/api/money/reminders",
+            "/api/money/savings-goals",
+            "/api/money/income-sources",
+            "/api/money/salary-payments",
+            "/api/money/reimbursements",
+            "/api/money/liabilities",
+            "/api/money/investment-accounts",
+            "/api/money/snapshots",
+            "/api/money/audit-logs",
+            "/api/money/import-jobs",
             "/api/money/dashboard",
           ].map((endpoint) => (
             <code key={endpoint} className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">

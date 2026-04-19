@@ -99,9 +99,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    await prisma.recurringTransactionTemplate.delete({ where: { id } });
+    await prisma.recurringTransactionTemplate.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
-    return NextResponse.json({ deletedId: id });
+    return NextResponse.json({ deletedId: id, archived: true });
   } catch (error) {
     return handleRouteError(error, "delete recurring template");
   }

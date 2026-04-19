@@ -70,9 +70,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    await prisma.financialAccount.delete({ where: { id } });
+    await prisma.financialAccount.update({
+      where: { id },
+      data: { isArchived: true },
+    });
 
-    return NextResponse.json({ deletedId: id });
+    return NextResponse.json({ deletedId: id, archived: true });
   } catch (error) {
     return handleRouteError(error, "delete financial account");
   }
